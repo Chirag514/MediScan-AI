@@ -1,15 +1,3 @@
----
-title: MediScan AI
-emoji: 🩺
-colorFrom: blue
-colorTo: green
-sdk: streamlit
-sdk_version: "1.36.0"
-app_file: app.py
-pinned: false
-license: mit
----
-
 # 🩺 MediScan AI — Medical Image Segmentation + Report Generation
 
 AI-powered pipeline that segments medical scans using SegFormer-b2 (fine-tuned) and generates structured clinical reports via Groq LLM. Fully CPU-deployable.
@@ -67,4 +55,4 @@ MediScan_AI/
 ```
 
 ## ⚠️ Disclaimer
-This tool is for **educational and research purposes only**. It is NOT a substitute for professional medical diagnosis. Always consult a licensed physician.
+This is NOT a substitute for professional medical diagnosis. Always consult a licensed physician.
