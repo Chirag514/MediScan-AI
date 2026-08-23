@@ -60,6 +60,10 @@ THEME_CSS = {
         <style>
         .stApp { background-color: #f8fafc !important; }
         header[data-testid="stHeader"] { background-color: #ffffff !important; }
+        header[data-testid="stHeader"] button { color: #344054 !important; }
+        header[data-testid="stHeader"] button span,
+        header[data-testid="stHeader"] button svg,
+        header[data-testid="stHeader"] button path { color: #344054 !important; fill: currentColor !important; stroke: currentColor !important; }
         [data-testid="stSidebar"] { background-color: #e8edf5 !important; border-right: 1px solid #d1d9e6 !important; }
         .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
         .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #1a1a2e !important; }
@@ -120,6 +124,8 @@ THEME_CSS = {
         @media (prefers-color-scheme: light) {
             .stApp { background-color: #f8fafc !important; }
             header[data-testid="stHeader"] { background-color: #ffffff !important; }
+            header[data-testid="stHeader"] button { color: #344054 !important; }
+            header[data-testid="stHeader"] button span, header[data-testid="stHeader"] button svg, header[data-testid="stHeader"] button path { color: #344054 !important; fill: currentColor !important; stroke: currentColor !important; }
             [data-testid="stSidebar"] { background-color: #e8edf5 !important; border-right: 1px solid #d1d9e6 !important; }
             .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #1a1a2e !important; }
             button[kind="primary"] * { color: white !important; }
