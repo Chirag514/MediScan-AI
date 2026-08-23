@@ -29,32 +29,62 @@ THEME_CSS = {
             --secondary-bg: #1a1f2e;
             --text-color: #fafafa;
             --accent: #00d4aa;
+            --border-color: #31333f;
         }
         .stApp { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
-        section[data-testid="stSidebar"] { background-color: var(--secondary-bg) !important; }
+        section[data-testid="stSidebar"] { background-color: var(--secondary-bg) !important; border-right: 1px solid var(--border-color) !important; }
+        h1, h2, h3, h4, p, label, div { color: var(--text-color) !important; }
+        .stButton>button { border: 1px solid var(--accent) !important; color: var(--accent) !important; }
+        .stRadio label { color: var(--text-color) !important; }
+        div[data-testid="stExpander"] { background-color: var(--secondary-bg) !important; border: 1px solid var(--border-color) !important; }
         </style>
     """,
     "Light": """
         <style>
-        :root {
-            --bg-color: #ffffff;
-            --secondary-bg: #f0f4f8;
-            --text-color: #1a1a2e;
-            --accent: #0077cc;
+        .stApp {
+            background-color: #f8fafc !important;
         }
-        .stApp { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
-        section[data-testid="stSidebar"] { background-color: var(--secondary-bg) !important; }
+        [data-testid="stSidebar"] {
+            background-color: #e8edf5 !important;
+            border-right: 1px solid #d1d9e6 !important;
+        }
+        .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
+        .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * {
+            color: #1a1a2e !important;
+        }
+        button[kind="primary"] * {
+            color: white !important;
+        }
+        div[data-baseweb="select"] > div,
+        div[data-testid="stFileUploader"],
+        details[data-testid="stExpander"] {
+            background-color: #ffffff !important;
+            border-color: #d1d9e6 !important;
+        }
+        [data-testid="stMetricValue"] div {
+            color: #0077cc !important;
+        }
+        hr { border-color: #d1d9e6 !important; }
         </style>
     """,
     "System": """
         <style>
         @media (prefers-color-scheme: dark) {
-            .stApp { background-color: #0e1117 !important; color: #fafafa !important; }
-            section[data-testid="stSidebar"] { background-color: #1a1f2e !important; }
+            .stApp { background-color: #0e1117 !important; }
+            [data-testid="stSidebar"] { background-color: #1a1f2e !important; border-right: 1px solid #31333f !important; }
+            .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #fafafa !important; }
+            div[data-baseweb="select"] > div, div[data-testid="stFileUploader"], details[data-testid="stExpander"] { background-color: #0e1117 !important; border-color: #31333f !important; }
+            [data-testid="stMetricValue"] div { color: #00d4aa !important; }
+            hr { border-color: #31333f !important; }
         }
         @media (prefers-color-scheme: light) {
-            .stApp { background-color: #ffffff !important; color: #1a1a2e !important; }
-            section[data-testid="stSidebar"] { background-color: #f0f4f8 !important; }
+            .stApp { background-color: #f8fafc !important; }
+            [data-testid="stSidebar"] { background-color: #e8edf5 !important; border-right: 1px solid #d1d9e6 !important; }
+            .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #1a1a2e !important; }
+            button[kind="primary"] * { color: white !important; }
+            div[data-baseweb="select"] > div, div[data-testid="stFileUploader"], details[data-testid="stExpander"] { background-color: #ffffff !important; border-color: #d1d9e6 !important; }
+            [data-testid="stMetricValue"] div { color: #0077cc !important; }
+            hr { border-color: #d1d9e6 !important; }
         }
         </style>
     """,
