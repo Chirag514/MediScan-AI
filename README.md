@@ -1,5 +1,7 @@
 # 🩺 MediScan AI — Medical Image Segmentation + Report Generation
 
+[![🚀 Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-MediScan%20AI-FF4B4B?style=for-the-badge)](https://mediscanai-app.streamlit.app/)
+
 AI-powered pipeline that segments medical scans using SegFormer-b2 (fine-tuned) and generates structured clinical reports via Groq LLM. Fully CPU-deployable.
 
 ## Architecture
