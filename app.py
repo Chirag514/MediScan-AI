@@ -20,6 +20,51 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Theme Definitions ─────────────────────────────────────────────────────────
+THEME_CSS = {
+    "Dark": """
+        <style>
+        :root {
+            --bg-color: #0e1117;
+            --secondary-bg: #1a1f2e;
+            --text-color: #fafafa;
+            --accent: #00d4aa;
+        }
+        .stApp { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
+        section[data-testid="stSidebar"] { background-color: var(--secondary-bg) !important; }
+        </style>
+    """,
+    "Light": """
+        <style>
+        :root {
+            --bg-color: #ffffff;
+            --secondary-bg: #f0f4f8;
+            --text-color: #1a1a2e;
+            --accent: #0077cc;
+        }
+        .stApp { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
+        section[data-testid="stSidebar"] { background-color: var(--secondary-bg) !important; }
+        </style>
+    """,
+    "System": """
+        <style>
+        @media (prefers-color-scheme: dark) {
+            .stApp { background-color: #0e1117 !important; color: #fafafa !important; }
+            section[data-testid="stSidebar"] { background-color: #1a1f2e !important; }
+        }
+        @media (prefers-color-scheme: light) {
+            .stApp { background-color: #ffffff !important; color: #1a1a2e !important; }
+            section[data-testid="stSidebar"] { background-color: #f0f4f8 !important; }
+        }
+        </style>
+    """,
+}
+
+# ── Apply selected theme ──────────────────────────────────────────────────────
+if "theme" not in st.session_state:
+    st.session_state.theme = "Dark"
+st.markdown(THEME_CSS[st.session_state.theme], unsafe_allow_html=True)
+
 # ── Header ───────────────────────────────────────────────────────────────────
 st.title("🩺 MediScan AI")
 st.caption("AI-powered medical image segmentation and preliminary report generation.")
@@ -32,6 +77,22 @@ st.divider()
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("⚙️ Settings")
+
+    # ── Theme Toggle ──────────────────────────────────────────────────────────
+    theme_icons = {"Dark": "🌙 Dark", "Light": "☀️ Light", "System": "💻 System"}
+    selected_theme = st.radio(
+        "Theme",
+        options=list(theme_icons.keys()),
+        format_func=lambda x: theme_icons[x],
+        index=list(theme_icons.keys()).index(st.session_state.theme),
+        horizontal=True,
+        key="theme_radio",
+    )
+    if selected_theme != st.session_state.theme:
+        st.session_state.theme = selected_theme
+        st.rerun()
+
+    st.divider()
     scan_type = st.selectbox(
         "Scan Type",
         options=["skin_lesion", "chest_xray", "ultrasound"],
