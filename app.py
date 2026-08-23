@@ -13,76 +13,142 @@ from segmentation.postprocess import overlay_mask_on_image, extract_region_stats
 from report.generator import generate_report
 from report.pdf_export import generate_pdf
 
-# ── Page Config ──────────────────────────────────────────────────────────────
+# -- Page Config ---------------------------------------------------------------
 st.set_page_config(
     page_title="MediScan AI",
     page_icon="🩺",
     layout="wide",
 )
 
-# ── Theme Definitions ─────────────────────────────────────────────────────────
+# -- Theme Definitions ---------------------------------------------------------
 THEME_CSS = {
     "Dark": """
         <style>
         :root {
-            --bg-color: #0e1117;
-            --secondary-bg: #1a1f2e;
-            --text-color: #fafafa;
-            --accent: #00d4aa;
-            --border-color: #31333f;
+            --bg-color: #0b1220;
+            --secondary-bg: #111a2b;
+            --surface-color: #162237;
+            --text-color: #f4f7fb;
+            --muted-text: #aab7c8;
+            --accent: #62d7c1;
+            --border-color: #2a3a52;
         }
         .stApp { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
+        header[data-testid="stHeader"] { background-color: var(--bg-color) !important; }
         section[data-testid="stSidebar"] { background-color: var(--secondary-bg) !important; border-right: 1px solid var(--border-color) !important; }
-        h1, h2, h3, h4, p, label, div { color: var(--text-color) !important; }
-        .stButton>button { border: 1px solid var(--accent) !important; color: var(--accent) !important; }
+        .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label,
+        .stApp [data-testid="stMarkdownContainer"] p,
+        .stApp [data-testid="stMarkdownContainer"] li { color: var(--text-color) !important; }
+        .stApp [data-testid="stCaptionContainer"] { color: var(--muted-text) !important; }
+        .stButton > button { border: 1px solid var(--accent) !important; color: var(--accent) !important; background: transparent !important; }
         .stRadio label { color: var(--text-color) !important; }
-        div[data-testid="stExpander"] { background-color: var(--secondary-bg) !important; border: 1px solid var(--border-color) !important; }
+        div[data-baseweb="select"] > div,
+        div[data-testid="stFileUploader"],
+        div[data-testid="stFileUploader"] section,
+        div[data-testid="stFileUploaderDropzone"] { background-color: var(--surface-color) !important; border-color: var(--border-color) !important; }
+        div[data-testid="stFileUploader"] small,
+        div[data-testid="stFileUploader"] span { color: var(--muted-text) !important; }
+        div[data-testid="stFileUploader"] button { background-color: #22324a !important; border: 1px solid #3b506d !important; color: var(--text-color) !important; }
+        div[data-testid="stFileUploader"] button:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+        div[data-testid="stAlert"] { background-color: #18263a !important; border: 1px solid #38516d !important; border-left: 3px solid var(--accent) !important; color: var(--text-color) !important; }
+        div[data-testid="stAlert"] p { color: var(--text-color) !important; }
+        div[data-testid="stExpander"] { background-color: var(--surface-color) !important; border: 1px solid var(--border-color) !important; }
+        hr { border-color: var(--border-color) !important; }
         </style>
     """,
     "Light": """
         <style>
-        .stApp {
-            background-color: #f8fafc !important;
-        }
-        [data-testid="stSidebar"] {
-            background-color: #e8edf5 !important;
-            border-right: 1px solid #d1d9e6 !important;
-        }
-        .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
-        .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * {
-            color: #1a1a2e !important;
-        }
-        button[kind="primary"] * {
-            color: white !important;
-        }
+        .stApp { background-color: #f8fafc !important; }
+        header[data-testid="stHeader"] { background-color: #ffffff !important; }
+        [data-testid="stSidebar"] { background-color: #e8edf5 !important; border-right: 1px solid #d1d9e6 !important; }
+        .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+        .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #1a1a2e !important; }
+        button[kind="primary"] * { color: white !important; }
         div[data-baseweb="select"] > div,
         div[data-testid="stFileUploader"],
-        details[data-testid="stExpander"] {
-            background-color: #ffffff !important;
-            border-color: #d1d9e6 !important;
-        }
-        [data-testid="stMetricValue"] div {
-            color: #0077cc !important;
-        }
+        div[data-testid="stFileUploader"] section,
+        div[data-testid="stFileUploaderDropzone"],
+        div[data-testid="stExpander"] { background-color: #ffffff !important; border-color: #d1d9e6 !important; }
+        div[data-baseweb="select"], div[data-baseweb="select"] > div,
+        div[data-baseweb="select"] input { background-color: #ffffff !important; color: #1a1a2e !important; }
+        [data-testid="stSelectbox"] [data-baseweb="select"] * { color: #1a1a2e !important; }
+        div[data-baseweb="select"] svg { fill: #344054 !important; color: #344054 !important; }
+        div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"], li[role="option"] { background-color: #ffffff !important; color: #1a1a2e !important; }
+        div[data-baseweb="popover"] *, div[data-baseweb="menu"] *, ul[role="listbox"] *, li[role="option"] * { color: #1a1a2e !important; }
+        li[role="option"]:hover, li[role="option"][aria-selected="true"] { background-color: #e8f1f8 !important; color: #1a1a2e !important; }
+        [data-testid="stRadio"] * { color: #1a1a2e !important; }
+        [data-testid="stRadio"] div[role="radio"], [data-baseweb="radio"] div { background-color: #ffffff !important; border-color: #98a2b3 !important; color: #1a1a2e !important; }
+        [data-testid="stRadio"] div[role="radio"][aria-checked="true"] { background-color: #62d7c1 !important; border-color: #149f8b !important; }
+        [data-testid="stRadio"] input[type="radio"] { accent-color: #16b8a2 !important; }
+        [data-testid="stRadio"] label span, [data-testid="stSelectbox"] [data-baseweb="select"] * { color: #344054 !important; }
+        [data-testid="stRadioGroup"], [data-testid="stRadioGroup"] label,
+        [data-testid="stRadioGroup"] label *, [data-testid="stRadioGroup"] p { color: #344054 !important; }
+        [data-testid="stRadioGroup"] input[type="radio"] { accent-color: #16b8a2 !important; }
+        [data-testid="stRadioOption"] > div > div > div:first-child { background-color: #ffffff !important; border: 1px solid #98a2b3 !important; }
+        [data-testid="stRadioOption"] > div > div > div:first-child > div { background-color: #ffffff !important; }
+        [data-testid="stRadioOption"][data-selected="true"] > div > div > div:first-child { background-color: #16b8a2 !important; border-color: #16b8a2 !important; }
+        [data-testid="stRadioOption"][data-selected="true"] > div > div > div:first-child > div { background-color: #ffffff !important; }
+        [data-testid="stSelectbox"] [role="group"] { background-color: #ffffff !important; }
+        [data-testid="stSelectbox"] [role="combobox"], [data-testid="stSelectbox"] [role="combobox"] * { color: #344054 !important; background-color: #ffffff !important; }
+        [data-testid="stSelectbox"] [role="group"] button { background-color: #ffffff !important; color: #344054 !important; }
+        body [role="listbox"], body [role="listbox"] *, body [role="option"] { color: #344054 !important; background-color: #ffffff !important; }
+        div[data-testid="stFileUploader"] button { background-color: #ffffff !important; border: 1px solid #c7d0dc !important; color: #1a1a2e !important; }
+        div[data-testid="stFileUploader"] button:hover { border-color: #0077cc !important; color: #0077cc !important; }
+        div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] span { color: #667085 !important; }
+        div[data-testid="stAlert"] { background-color: #fff9d9 !important; border: 1px solid #eadb87 !important; color: #1a1a2e !important; }
+        div[data-testid="stAlert"] p { color: #1a1a2e !important; }
+        [data-testid="stMetricValue"] div { color: #0077cc !important; }
         hr { border-color: #d1d9e6 !important; }
         </style>
     """,
     "System": """
         <style>
         @media (prefers-color-scheme: dark) {
-            .stApp { background-color: #0e1117 !important; }
-            [data-testid="stSidebar"] { background-color: #1a1f2e !important; border-right: 1px solid #31333f !important; }
-            .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #fafafa !important; }
-            div[data-baseweb="select"] > div, div[data-testid="stFileUploader"], details[data-testid="stExpander"] { background-color: #0e1117 !important; border-color: #31333f !important; }
-            [data-testid="stMetricValue"] div { color: #00d4aa !important; }
-            hr { border-color: #31333f !important; }
+            .stApp { background-color: #0b1220 !important; color: #f4f7fb !important; }
+            header[data-testid="stHeader"] { background-color: #0b1220 !important; }
+            [data-testid="stSidebar"] { background-color: #111a2b !important; border-right: 1px solid #2a3a52 !important; }
+            .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp label, .stApp [data-testid="stMarkdownContainer"] p, .stApp [data-testid="stMarkdownContainer"] li { color: #f4f7fb !important; }
+            .stApp [data-testid="stCaptionContainer"] { color: #aab7c8 !important; }
+            div[data-baseweb="select"] > div, div[data-testid="stFileUploader"], div[data-testid="stFileUploader"] section, div[data-testid="stFileUploaderDropzone"] { background-color: #162237 !important; border-color: #2a3a52 !important; }
+            div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] span { color: #aab7c8 !important; }
+            div[data-testid="stFileUploader"] button { background-color: #22324a !important; border: 1px solid #3b506d !important; color: #f4f7fb !important; }
+            div[data-testid="stAlert"] { background-color: #18263a !important; border: 1px solid #38516d !important; border-left: 3px solid #62d7c1 !important; color: #f4f7fb !important; }
+            div[data-testid="stAlert"] p { color: #f4f7fb !important; }
+            div[data-testid="stExpander"] { background-color: #162237 !important; border: 1px solid #2a3a52 !important; }
+            hr { border-color: #2a3a52 !important; }
         }
         @media (prefers-color-scheme: light) {
             .stApp { background-color: #f8fafc !important; }
+            header[data-testid="stHeader"] { background-color: #ffffff !important; }
             [data-testid="stSidebar"] { background-color: #e8edf5 !important; border-right: 1px solid #d1d9e6 !important; }
             .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #1a1a2e !important; }
             button[kind="primary"] * { color: white !important; }
-            div[data-baseweb="select"] > div, div[data-testid="stFileUploader"], details[data-testid="stExpander"] { background-color: #ffffff !important; border-color: #d1d9e6 !important; }
+            div[data-baseweb="select"] > div, div[data-testid="stFileUploader"], div[data-testid="stFileUploader"] section, div[data-testid="stFileUploaderDropzone"], div[data-testid="stExpander"] { background-color: #ffffff !important; border-color: #d1d9e6 !important; }
+            div[data-baseweb="select"], div[data-baseweb="select"] > div, div[data-baseweb="select"] input { background-color: #ffffff !important; color: #1a1a2e !important; }
+            [data-testid="stSelectbox"] [data-baseweb="select"] * { color: #1a1a2e !important; }
+            div[data-baseweb="select"] svg { fill: #344054 !important; color: #344054 !important; }
+            div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"], li[role="option"] { background-color: #ffffff !important; color: #1a1a2e !important; }
+            div[data-baseweb="popover"] *, div[data-baseweb="menu"] *, ul[role="listbox"] *, li[role="option"] * { color: #1a1a2e !important; }
+            li[role="option"]:hover, li[role="option"][aria-selected="true"] { background-color: #e8f1f8 !important; color: #1a1a2e !important; }
+            [data-testid="stRadio"] * { color: #1a1a2e !important; }
+            [data-testid="stRadio"] div[role="radio"], [data-baseweb="radio"] div { background-color: #ffffff !important; border-color: #98a2b3 !important; color: #1a1a2e !important; }
+            [data-testid="stRadio"] div[role="radio"][aria-checked="true"] { background-color: #62d7c1 !important; border-color: #149f8b !important; }
+            [data-testid="stRadio"] input[type="radio"] { accent-color: #16b8a2 !important; }
+            [data-testid="stRadio"] label span, [data-testid="stSelectbox"] [data-baseweb="select"] * { color: #344054 !important; }
+            [data-testid="stRadioGroup"], [data-testid="stRadioGroup"] label, [data-testid="stRadioGroup"] label *, [data-testid="stRadioGroup"] p { color: #344054 !important; }
+            [data-testid="stRadioGroup"] input[type="radio"] { accent-color: #16b8a2 !important; }
+            [data-testid="stRadioOption"] > div > div > div:first-child { background-color: #ffffff !important; border: 1px solid #98a2b3 !important; }
+            [data-testid="stRadioOption"] > div > div > div:first-child > div { background-color: #ffffff !important; }
+            [data-testid="stRadioOption"][data-selected="true"] > div > div > div:first-child { background-color: #16b8a2 !important; border-color: #16b8a2 !important; }
+            [data-testid="stRadioOption"][data-selected="true"] > div > div > div:first-child > div { background-color: #ffffff !important; }
+            [data-testid="stSelectbox"] [role="group"] { background-color: #ffffff !important; }
+            [data-testid="stSelectbox"] [role="combobox"], [data-testid="stSelectbox"] [role="combobox"] * { color: #344054 !important; background-color: #ffffff !important; }
+            [data-testid="stSelectbox"] [role="group"] button { background-color: #ffffff !important; color: #344054 !important; }
+            body [role="listbox"], body [role="listbox"] *, body [role="option"] { color: #344054 !important; background-color: #ffffff !important; }
+            div[data-testid="stFileUploader"] button { background-color: #ffffff !important; border: 1px solid #c7d0dc !important; color: #1a1a2e !important; }
+            div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] span { color: #667085 !important; }
+            div[data-testid="stAlert"] { background-color: #fff9d9 !important; border: 1px solid #eadb87 !important; color: #1a1a2e !important; }
+            div[data-testid="stAlert"] p { color: #1a1a2e !important; }
             [data-testid="stMetricValue"] div { color: #0077cc !important; }
             hr { border-color: #d1d9e6 !important; }
         }
@@ -97,12 +163,15 @@ st.markdown(THEME_CSS[st.session_state.theme], unsafe_allow_html=True)
 
 # ── Header ───────────────────────────────────────────────────────────────────
 st.title("🩺 MediScan AI")
+
+
 st.caption("AI-powered medical image segmentation and preliminary report generation.")
 st.warning(
     "⚠️ **Disclaimer:** This tool is NOT a substitute for professional medical diagnosis. Always consult a licensed physician.",
     icon="⚠️",
 )
 st.divider()
+
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -123,6 +192,7 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
+
     scan_type = st.selectbox(
         "Scan Type",
         options=["skin_lesion", "chest_xray", "ultrasound"],
@@ -135,17 +205,19 @@ with st.sidebar:
 
     st.divider()
     st.subheader("📌 How It Works")
-    st.markdown("""
-    1. Upload a medical scan image
-    2. SegFormer-b2 (fine-tuned) segments the region of interest
-    3. Region statistics are extracted
-    4. Groq LLM generates a structured report
-    5. Download the PDF report
-    """)
+    with st.container(border=True):
+        st.markdown("""
+        1. Upload a medical scan image
+        2. SegFormer-b2 (fine-tuned) segments the region of interest
+        3. Region statistics are extracted
+        4. Groq LLM generates a structured report
+        5. Download the PDF report
+        """)
 
     st.divider()
     st.subheader("📂 Sample Images")
-    st.markdown("No image? Try a public sample from [ISIC Archive](https://www.isic-archive.com/)")
+    with st.container(border=True):
+        st.markdown("No image? Try a public sample from [ISIC Archive](https://www.isic-archive.com/)")
 
 # ── DICOM loader ─────────────────────────────────────────────────────────────
 def load_dicom(file) -> Image.Image:
@@ -324,8 +396,6 @@ if uploaded_file is not None:
         st.write(report.get("recommendations", "N/A"))
 
     with col_r2:
-        # st.markdown("#### 🎯 AI Confidence")
-        # st.markdown(f"<h2 style='color:{conf_color}'>{conf}</h2>", unsafe_allow_html=True)
         st.markdown(
     f"""
     <div style="font-size: 24px; font-weight: bold;">
@@ -365,14 +435,15 @@ if uploaded_file is not None:
     )
 
 else:
-    st.info("👆 Upload a medical scan image to get started.")
-    st.markdown("""
-    **Supported scan types:**
-    - 🔬 **Skin Lesion** — dermatoscopy or clinical skin lesion photographs
-    - 🫁 **Chest X-Ray** — frontal chest radiographs
-    - 🔊 **Breast Ultrasound** — breast ultrasound images
+    with st.container(border=True):
+        st.info("👆 Upload a medical scan image to get started.")
+        st.markdown("""
+        **Supported scan types:**
+        - 🔬 **Skin Lesion** — dermatoscopy or clinical skin lesion photographs
+        - 🫁 **Chest X-Ray** — frontal chest radiographs
+        - 🔊 **Breast Ultrasound** — breast ultrasound images
 
-    **Supported formats:** JPG, PNG, TIFF, BMP, WEBP, DICOM (.dcm)
+        **Supported formats:** JPG, PNG, TIFF, BMP, WEBP, DICOM (.dcm)
 
-    **Please upload a clean scan image.**
-    """)
+        **Please upload a clean scan image.**
+        """)
