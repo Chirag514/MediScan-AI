@@ -47,6 +47,7 @@ test_images/
 
 # Logs
 *.log
+logs/
 
 # Streamlit
 .streamlit/secrets.toml
