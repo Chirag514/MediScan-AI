@@ -71,6 +71,20 @@ def extract_region_stats(
     area = int(mask.sum())
     area_pct = round(area / total_pixels * 100, 2)
 
+    if area == 0:
+        return {
+            "area_pct": area_pct,
+            "location": "not detected",
+            "mean_intensity": 0.0,
+            "std_intensity": 0.0,
+            "contrast_ratio": 0.0,
+            "irregularity": 1.0,
+            "bbox_wh_ratio": 0.0,
+            "solidity": 0.0,
+            "centroid": (0.0, 0.0),
+            "image_size": (W, H),
+        }
+
     # ── location (quadrant) ──────────────────────────────────────────────────
     ys, xs = np.where(mask)
     centroid_x = float(xs.mean())

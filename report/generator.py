@@ -1,17 +1,47 @@
 """
 report/generator.py
-Structured clinical report generation via Groq (GPT-OSS-120B).
+Structured clinical report generation via Groq with Gemini fallback.
 Takes segmentation stats → returns structured report dict.
 """
 
 import json
 import os
+from functools import lru_cache
 from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY")) if os.getenv("GROQ_API_KEY") else None
+
+
+def _model_list(variable: str, defaults: list[str]) -> list[str]:
+    configured = os.getenv(variable)
+    return [model.strip() for model in configured.split(",") if model.strip()] if configured else defaults
+
+
+GROQ_MODELS = _model_list(
+    "GROQ_MODELS",
+    ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.6-27b"],
+)
+GEMINI_MODELS = _model_list(
+    "GEMINI_MODELS",
+    ["gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"],
+)
+
+LOCAL_LLM_MODEL = os.getenv(
+    "LOCAL_LLM_MODEL",
+    "HuggingFaceTB/SmolLM2-360M-Instruct",
+)
+
+# Quality-ranked route with providers interleaved. The lighter models preserve
+# request and token quota when a stronger model is unavailable or rate-limited.
+MODEL_ROUTE = []
+for index in range(max(len(GROQ_MODELS), len(GEMINI_MODELS))):
+    if index < len(GEMINI_MODELS):
+        MODEL_ROUTE.append(("Gemini", GEMINI_MODELS[index]))
+    if index < len(GROQ_MODELS):
+        MODEL_ROUTE.append(("Groq", GROQ_MODELS[index]))
 
 SYSTEM_PROMPT = """You are a medical imaging AI assistant that generates structured preliminary 
 reports based on image segmentation analysis data. You are NOT a doctor and your output is 
@@ -71,49 +101,139 @@ for chest X-ray (use 'lung field', 'opacity', 'consolidation')
 and for ultrasound use 'mass', 'nodule', or 'lesion' only if appropriate."""
 
 
-def generate_report(stats: dict, interpretations: dict, scan_type: str) -> dict:
-    """
-    Call Groq API and return parsed report dict.
-    Falls back gracefully on API/parse errors.
-    """
-    prompt = build_prompt(stats, interpretations, scan_type)
+REQUIRED_KEYS = [
+    "findings", "impression", "confidence", "differential",
+    "recommendations", "disclaimer",
+]
+
+
+def _parse_report(raw: str) -> dict:
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    report = json.loads(raw)
+    if not isinstance(report, dict):
+        raise ValueError("Model response was not a JSON object")
+    for key in REQUIRED_KEYS:
+        if key not in report:
+            report[key] = "Not available"
+    return report
+
+
+@lru_cache(maxsize=1)
+def _load_local_llm(model_name: str):
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+    )
+    return tokenizer, model
+
+
+def _generate_with_groq(prompt: str, model: str) -> dict:
+    if groq_client is None:
+        raise RuntimeError("GROQ_API_KEY is not configured")
+
+    response = groq_client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.3,
+        max_tokens=1000,
+        response_format={"type": "json_object"},
+    )
+    return _parse_report(response.choices[0].message.content)
+
+
+def _generate_with_gemini(prompt: str, model: str) -> dict:
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is not configured")
 
     try:
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.3,      # low temp for consistent structured output
-            max_tokens=800,
-            response_format={"type": "json_object"},  # enforce JSON output
+        import google.genai as genai
+        from google.genai import types
+    except ModuleNotFoundError as error:
+        raise RuntimeError(
+            "Gemini SDK is unavailable in the active environment; install google-genai."
+        ) from error
+
+    gemini_client = genai.Client(api_key=api_key)
+    response = gemini_client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            temperature=0.3,
+            max_output_tokens=1000,
+            response_mime_type="application/json",
+        ),
+    )
+    return _parse_report(response.text)
+
+
+def _generate_with_local_llm(prompt: str, model_name: str) -> dict:
+    if os.getenv("LOCAL_LLM_ENABLED", "true").lower() not in {"1", "true", "yes"}:
+        raise RuntimeError("LOCAL_LLM_ENABLED is disabled")
+
+    import torch
+
+    tokenizer, model = _load_local_llm(model_name)
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": prompt},
+    ]
+    if tokenizer.chat_template:
+        inputs = tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            return_tensors="pt",
         )
+    else:
+        inputs = tokenizer(
+            f"{SYSTEM_PROMPT}\n\n{prompt}",
+            return_tensors="pt",
+        ).input_ids
 
-        raw = response.choices[0].message.content
-        report = json.loads(raw)
+    with torch.no_grad():
+        output = model.generate(
+            inputs,
+            max_new_tokens=500,
+            do_sample=False,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+    generated = output[0][inputs.shape[-1]:]
+    return _parse_report(tokenizer.decode(generated, skip_special_tokens=True))
 
-        # validate required keys exist
-        required = ["findings", "impression", "confidence",
-                    "differential", "recommendations", "disclaimer"]
-        for key in required:
-            if key not in report:
-                report[key] = "Not available"
 
-        return {"success": True, "report": report}
+def generate_report(stats: dict, interpretations: dict, scan_type: str) -> dict:
+    """Try the quality-ranked multi-provider route, then use a local fallback."""
+    prompt = build_prompt(stats, interpretations, scan_type)
+    errors = []
 
-    except json.JSONDecodeError as e:
-        return {
-            "success": False,
-            "error": f"JSON parse error: {e}",
-            "report": _fallback_report(),
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e),
-            "report": _fallback_report(),
-        }
+    generators = {"Groq": _generate_with_groq, "Gemini": _generate_with_gemini}
+    attempts = [(provider, model, generators[provider]) for provider, model in MODEL_ROUTE]
+    attempts.append(("Local", LOCAL_LLM_MODEL, _generate_with_local_llm))
+
+    for provider, model, generator in attempts:
+        try:
+            return {
+                "success": True,
+                "provider": provider,
+                "model": model,
+                "report": generator(prompt, model),
+            }
+        except Exception as error:
+            errors.append(f"{provider} ({model}): {error}")
+
+    return {
+        "success": False,
+        "error": "; ".join(errors),
+        "report": _fallback_report(),
+    }
 
 
 def _fallback_report() -> dict:

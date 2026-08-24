@@ -89,7 +89,7 @@ class MedicalReportPDF(FPDF):
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(150, 150, 150)
         self.cell(0, 10, sanitize(
-            f"Page {self.page_no()} | AI Preliminary Report - For Research Use Only"), align="C")
+            f"Page {self.page_no()} | AI Preliminary Report"), align="C")
 
 
 def generate_pdf(

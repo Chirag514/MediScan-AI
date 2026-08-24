@@ -19,6 +19,44 @@ st.set_page_config(
     page_icon="🩺",
     layout="wide",
 )
+st.markdown("""
+<style>
+/* Fix the black box — it's the image fullscreen button */
+[data-testid="StyledFullScreenButton"] {
+    background-color: transparent !important;
+    color: inherit !important;
+}
+button[data-testid="StyledFullScreenButton"] {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+button[data-testid="StyledFullScreenButton"] svg {
+    fill: #666 !important;
+}
+
+/* Streamlit 1.62 applies the page offset to this container. */
+[data-testid="stMainBlockContainer"] {
+    padding-top: 1rem !important;
+}
+
+/* Fix toolbar black box */
+[data-testid="stToolbar"] {
+    background-color: transparent !important;
+    right: 0 !important;
+}
+
+/* Fix metric cards */
+[data-testid="stMetric"] {
+    background-color: transparent !important;
+}
+
+/* Fix deploy button area */
+[data-testid="stDecoration"] {
+    background-color: transparent !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # -- Theme Definitions ---------------------------------------------------------
 THEME_CSS = {
@@ -58,16 +96,61 @@ THEME_CSS = {
     """,
     "Light": """
         <style>
-        .stApp { background-color: #f8fafc !important; }
-        header[data-testid="stHeader"] { background-color: #ffffff !important; }
+        .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"],
+        [data-testid="stMainBlockContainer"] { background-color: #f8fafc !important; color: #1a1a2e !important; }
+        header[data-testid="stHeader"] { background-color: #ffffff !important; color: #344054 !important; }
         header[data-testid="stHeader"] button { color: #344054 !important; }
         header[data-testid="stHeader"] button span,
-        header[data-testid="stHeader"] button svg,
-        header[data-testid="stHeader"] button path { color: #344054 !important; fill: currentColor !important; stroke: currentColor !important; }
+        header[data-testid="stHeader"] button svg { color: #344054 !important; }
+        header[data-testid="stHeader"] button svg path { color: #344054 !important; }
         [data-testid="stSidebar"] { background-color: #e8edf5 !important; border-right: 1px solid #d1d9e6 !important; }
         .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
         .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #1a1a2e !important; }
         button[kind="primary"] * { color: white !important; }
+        button[data-testid*="FullScreen" i],
+        [data-testid*="FullScreen" i] button,
+        button[aria-label*="fullscreen" i],
+        button[title*="fullscreen" i] {
+            background-color: #ffffff !important;
+            border: 1px solid #d1d9e6 !important;
+            color: #344054 !important;
+            box-shadow: none !important;
+        }
+        button[data-testid*="FullScreen" i] svg,
+        [data-testid*="FullScreen" i] button svg,
+        button[aria-label*="fullscreen" i] svg,
+        button[title*="fullscreen" i] svg { color: #344054 !important; }
+        [data-testid="stFileUploaderFile"],
+        [data-testid*="FileUploaderFile" i],
+        [class*="FileUploaderFile" i],
+        [data-testid*="ElementToolbar" i],
+        [class*="stElementToolbar"] {
+            background-color: #ffffff !important;
+            border-color: #d1d9e6 !important;
+            color: #344054 !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stFileUploaderFile"] *,
+        [data-testid*="FileUploaderFile" i] *,
+        [class*="FileUploaderFile" i] *,
+        [data-testid*="ElementToolbar" i] *,
+        [class*="stElementToolbar"] * { color: #344054 !important; }
+        [data-testid*="ElementToolbar" i],
+        [class*="stElementToolbar"] { background-color: transparent !important; border: none !important; }
+        [data-testid="stElementToolbarButton"] button {
+            background-color: #ffffff !important;
+            border: 1px solid #d1d9e6 !important;
+            color: #344054 !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stElementToolbarButtonIcon"] { color: #344054 !important; }
+        div[data-testid="stFileUploader"] button[aria-label*="help" i] svg,
+        div[data-testid="stFileUploader"] button[aria-label*="help" i] svg * {
+            color: #344054 !important;
+            stroke: currentColor !important;
+        }
         div[data-baseweb="select"] > div,
         div[data-testid="stFileUploader"],
         div[data-testid="stFileUploader"] section,
@@ -99,6 +182,38 @@ THEME_CSS = {
         div[data-testid="stFileUploader"] button { background-color: #ffffff !important; border: 1px solid #c7d0dc !important; color: #1a1a2e !important; }
         div[data-testid="stFileUploader"] button:hover { border-color: #0077cc !important; color: #0077cc !important; }
         div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] span { color: #667085 !important; }
+        div[data-testid="stFileUploader"] * { background-color: #ffffff !important; }
+        div[data-testid="stFileUploader"] button { color: #344054 !important; border-color: #c7d0dc !important; }
+        div[data-testid="stFileUploader"] * {
+            color: #344054 !important;
+            opacity: 1 !important;
+        }
+        div[data-testid="stExpander"] details,
+        div[data-testid="stExpander"] summary,
+        div[data-testid="stExpander"] summary:hover,
+        div[data-testid="stExpander"] [role="button"] {
+            background-color: #ffffff !important;
+            color: #1a1a2e !important;
+            border-color: #d1d9e6 !important;
+        }
+        div[data-testid="stExpander"] summary *,
+        div[data-testid="stExpander"] [role="button"] * { color: #344054 !important; }
+            div[data-testid="stFileUploader"] * { background-color: #ffffff !important; }
+            div[data-testid="stFileUploader"] button { color: #344054 !important; border-color: #c7d0dc !important; }
+            div[data-testid="stFileUploader"] * {
+                color: #344054 !important;
+                opacity: 1 !important;
+            }
+            div[data-testid="stExpander"] details,
+            div[data-testid="stExpander"] summary,
+            div[data-testid="stExpander"] summary:hover,
+            div[data-testid="stExpander"] [role="button"] {
+                background-color: #ffffff !important;
+                color: #1a1a2e !important;
+                border-color: #d1d9e6 !important;
+            }
+            div[data-testid="stExpander"] summary *,
+            div[data-testid="stExpander"] [role="button"] * { color: #344054 !important; }
         div[data-testid="stAlert"] { background-color: #fff9d9 !important; border: 1px solid #eadb87 !important; color: #1a1a2e !important; }
         div[data-testid="stAlert"] p { color: #1a1a2e !important; }
         [data-testid="stMetricValue"] div { color: #0077cc !important; }
@@ -122,13 +237,59 @@ THEME_CSS = {
             hr { border-color: #2a3a52 !important; }
         }
         @media (prefers-color-scheme: light) {
-            .stApp { background-color: #f8fafc !important; }
-            header[data-testid="stHeader"] { background-color: #ffffff !important; }
+            .stApp,
+            [data-testid="stAppViewContainer"],
+            [data-testid="stMain"],
+            [data-testid="stMainBlockContainer"] { background-color: #f8fafc !important; color: #1a1a2e !important; }
+            header[data-testid="stHeader"] { background-color: #ffffff !important; color: #344054 !important; }
             header[data-testid="stHeader"] button { color: #344054 !important; }
-            header[data-testid="stHeader"] button span, header[data-testid="stHeader"] button svg, header[data-testid="stHeader"] button path { color: #344054 !important; fill: currentColor !important; stroke: currentColor !important; }
+            header[data-testid="stHeader"] button span, header[data-testid="stHeader"] button svg { color: #344054 !important; }
+            header[data-testid="stHeader"] button svg path { color: #344054 !important; }
             [data-testid="stSidebar"] { background-color: #e8edf5 !important; border-right: 1px solid #d1d9e6 !important; }
             .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp span, .stApp label, .stApp li, .stApp div[data-testid="stMarkdownContainer"] * { color: #1a1a2e !important; }
             button[kind="primary"] * { color: white !important; }
+            button[data-testid*="FullScreen" i],
+            [data-testid*="FullScreen" i] button,
+            button[aria-label*="fullscreen" i],
+            button[title*="fullscreen" i] {
+                background-color: #ffffff !important;
+                border: 1px solid #d1d9e6 !important;
+                color: #344054 !important;
+                box-shadow: none !important;
+            }
+            button[data-testid*="FullScreen" i] svg,
+            [data-testid*="FullScreen" i] button svg,
+            button[aria-label*="fullscreen" i] svg,
+            button[title*="fullscreen" i] svg { color: #344054 !important; }
+            [data-testid="stFileUploaderFile"],
+            [data-testid*="FileUploaderFile" i],
+            [class*="FileUploaderFile" i],
+            [data-testid*="ElementToolbar" i],
+            [class*="stElementToolbar"] {
+                background-color: #ffffff !important;
+                border-color: #d1d9e6 !important;
+                color: #344054 !important;
+                box-shadow: none !important;
+            }
+            [data-testid="stFileUploaderFile"] *,
+            [data-testid*="FileUploaderFile" i] *,
+            [class*="FileUploaderFile" i] *,
+            [data-testid*="ElementToolbar" i] *,
+            [class*="stElementToolbar"] * { color: #344054 !important; }
+            [data-testid*="ElementToolbar" i],
+            [class*="stElementToolbar"] { background-color: transparent !important; border: none !important; }
+            [data-testid="stElementToolbarButton"] button {
+                background-color: #ffffff !important;
+                border: 1px solid #d1d9e6 !important;
+                color: #344054 !important;
+                box-shadow: none !important;
+            }
+            [data-testid="stElementToolbarButtonIcon"] { color: #344054 !important; }
+            div[data-testid="stFileUploader"] button[aria-label*="help" i] svg,
+            div[data-testid="stFileUploader"] button[aria-label*="help" i] svg * {
+                color: #344054 !important;
+                stroke: currentColor !important;
+            }
             div[data-baseweb="select"] > div, div[data-testid="stFileUploader"], div[data-testid="stFileUploader"] section, div[data-testid="stFileUploaderDropzone"], div[data-testid="stExpander"] { background-color: #ffffff !important; border-color: #d1d9e6 !important; }
             div[data-baseweb="select"], div[data-baseweb="select"] > div, div[data-baseweb="select"] input { background-color: #ffffff !important; color: #1a1a2e !important; }
             [data-testid="stSelectbox"] [data-baseweb="select"] * { color: #1a1a2e !important; }
@@ -173,7 +334,7 @@ st.title("🩺 MediScan AI")
 
 st.caption("AI-powered medical image segmentation and preliminary report generation.")
 st.warning(
-    "⚠️ **Disclaimer:** This tool is NOT a substitute for professional medical diagnosis. Always consult a licensed physician.",
+    "**Disclaimer:** This tool is NOT a substitute for professional medical diagnosis. Always consult a licensed physician.",
     icon="⚠️",
 )
 st.divider()
@@ -216,7 +377,7 @@ with st.sidebar:
         1. Upload a medical scan image
         2. SegFormer-b2 (fine-tuned) segments the region of interest
         3. Region statistics are extracted
-        4. Groq LLM generates a structured report
+        4. Groq / Gemini / Local LLM generates a structured report
         5. Download the PDF report
         """)
 
@@ -301,7 +462,6 @@ if uploaded_file is not None:
         ratio    = MAX_SIZE / max(image.size)
         new_size = (int(image.size[0] * ratio), int(image.size[1] * ratio))
         image = image.resize(new_size, Image.LANCZOS)
-        st.info(f"Image resized to {new_size} for faster processing.")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -363,25 +523,27 @@ if uploaded_file is not None:
             st.write(f"**Mean Intensity:** {stats['mean_intensity']} / 255")
             st.write(f"**Std Intensity:** {stats['std_intensity']}")
             st.write(f"**Contrast Ratio:** {stats['contrast_ratio']}")
-            st.write(f"**SAM2 Score:** {round(best_mask['score'], 3)}")
+            st.write(f"**Model Confidence:** {round(best_mask['score'], 3)}")
         with col_b:
             st.write(f"**Irregularity Index:** {stats['irregularity']}")
             st.write(f"**Solidity:** {stats['solidity']}")
             st.write(f"**BBox Aspect Ratio:** {stats['bbox_wh_ratio']}")
-            st.write(f"**Total Masks Generated:** {len(masks)}")
 
     st.divider()
 
     # ── Report Generation ─────────────────────────────────────────────────────
     st.subheader("📋 AI-Generated Report")
 
-    with st.spinner("📝 Generating clinical report via Groq (GPT-OSS-120B)..."):
+    with st.spinner("📝 Generating clinical report via Groq / Gemini / Local LLM..."):
         result = generate_report(stats, interpretations, scan_type)
 
     if not result["success"]:
         st.warning(f"Report generation issue: {result.get('error', 'Unknown error')}. Showing fallback report.")
+        st.caption("No configured API or local model returned a report. Showing the emergency fallback.")
 
     report = result["report"]
+    if result.get("provider"):
+        st.caption(f"Report generated with {result['provider']} ({result['model']}).")
 
     # confidence color
     confidence_colors = {"High": "green", "Moderate": "orange", "Low": "red"}

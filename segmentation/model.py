@@ -23,6 +23,7 @@ MODELS = {
     "ultrasound":  "models/segformer_busi.onnx",
     "chest_xray":  "models/segformer_xray.onnx",
 }
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # ImageNet normalization (same as training)
 MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
@@ -41,7 +42,8 @@ def load_session(scan_type: str) -> ort.InferenceSession:
         if model_path is None:
             raise ValueError(f"Unknown scan type: {scan_type}. "
                              f"Choose from {list(MODELS.keys())}")
-        if not Path(model_path).exists():
+        model_path = REPO_ROOT / model_path
+        if not model_path.exists():
             raise FileNotFoundError(
                 f"ONNX model not found: {model_path}\n"
                 f"Make sure you placed the .onnx files in the models/ folder."

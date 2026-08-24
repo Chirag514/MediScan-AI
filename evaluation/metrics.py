@@ -38,6 +38,11 @@ def evaluate_dataset(predictions: list, targets: list) -> dict:
     Evaluate over a list of (pred_mask, target_mask) pairs.
     Returns mean Dice, mean IoU, and per-sample scores.
     """
+    if not predictions or not targets:
+        raise ValueError("predictions and targets must not be empty")
+    if len(predictions) != len(targets):
+        raise ValueError("predictions and targets must have the same length")
+
     dice_scores = []
     iou_scores = []
 
