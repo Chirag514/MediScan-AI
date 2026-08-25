@@ -483,6 +483,7 @@ if uploaded_file is not None:
                 image, mask_array, color=(0, 255, 100), alpha=0.45
             )
             stats          = extract_region_stats(image, mask_array)
+            stats["seg_confidence"] = round(best_mask["score"], 3)
             interpretations = interpret_stats(stats, scan_type)
 
         except FileNotFoundError as e:

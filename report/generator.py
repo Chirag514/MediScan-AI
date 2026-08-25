@@ -71,6 +71,13 @@ SYSTEM_PROMPT = """You are a medical imaging AI assistant that generates structu
 reports based on image segmentation analysis data. You are NOT a doctor and your output is 
 NOT a clinical diagnosis. Always include appropriate disclaimers.
 
+The "confidence" field you report must reflect the segmentation model's own confidence score
+given in the input (0.0–1.0 scale), not your subjective impression of the findings:
+- score >= 0.85 → "High"
+- 0.6 <= score < 0.85 → "Moderate"
+- score < 0.6 → "Low"
+Do not report a confidence level inconsistent with this score.
+
 You must respond ONLY with a valid JSON object — no preamble, no markdown, no explanation.
 The JSON must have exactly these keys:
 {
@@ -116,6 +123,7 @@ QUANTITATIVE MEASUREMENTS:
 - Solidity (convexity): {stats['solidity']} ({interpretations['border']})
 - Bounding box aspect ratio (W/H): {stats['bbox_wh_ratio']}
 - Image dimensions: {stats['image_size'][0]}x{stats['image_size'][1]} px
+- Segmentation model confidence: {stats.get('seg_confidence', 'N/A')} (0.0–1.0 scale, from the segmentation model itself)
 
 INTERPRETATION SUMMARY:
 - Size: {interpretations['size']}
