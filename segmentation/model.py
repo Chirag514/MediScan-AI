@@ -16,6 +16,8 @@ import torch.nn.functional as F
 import torch
 from pathlib import Path
 
+torch.set_num_threads(1)
+
 
 # ── Model registry ───────────────────────────────────────────────────────────
 MODELS = {
@@ -50,7 +52,7 @@ def load_session(scan_type: str) -> ort.InferenceSession:
             )
         print(f"Loading {scan_type} model from {model_path}...")
         sess_options = ort.SessionOptions()
-        sess_options.intra_op_num_threads = 4   # use 4 CPU threads
+        sess_options.intra_op_num_threads = 1   # use 1 CPU thread
         sess_options.graph_optimization_level = (
             ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         )
