@@ -14,6 +14,30 @@ load_dotenv()
 
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY")) if os.getenv("GROQ_API_KEY") else None
 
+from json_repair import repair_json
+
+LIST_KEYS = {"differential"}
+
+def _parse_report(raw: str) -> dict:
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    try:
+        report = json.loads(raw)
+    except json.JSONDecodeError:
+        report = json.loads(repair_json(raw))
+    if not isinstance(report, dict):
+        raise ValueError("Model response was not a JSON object")
+    missing = [key for key in REQUIRED_KEYS if key not in report]
+    for key in REQUIRED_KEYS:
+        if key not in report:
+            report[key] = [] if key in LIST_KEYS else "Not available"
+        elif key in LIST_KEYS and not isinstance(report[key], list):
+            report[key] = [str(report[key])]
+    if len(missing) > 2:
+        raise ValueError(f"Response too incomplete — missing keys: {missing}")
+    return report
+
 
 def _model_list(variable: str, defaults: list[str]) -> list[str]:
     configured = os.getenv(variable)
@@ -58,6 +82,10 @@ The JSON must have exactly these keys:
   "disclaimer": "string — standard medical disclaimer"
 }"""
 
+STANDARD_DISCLAIMER = (
+    "This is an AI-generated preliminary analysis and is NOT a clinical "
+    "diagnosis. Always consult a licensed physician."
+)
 
 def build_prompt(stats: dict, interpretations: dict, scan_type: str) -> str:
     scan_labels = {
@@ -107,29 +135,60 @@ REQUIRED_KEYS = [
 ]
 
 
-def _parse_report(raw: str) -> dict:
-    raw = raw.strip()
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    report = json.loads(raw)
-    if not isinstance(report, dict):
-        raise ValueError("Model response was not a JSON object")
-    for key in REQUIRED_KEYS:
-        if key not in report:
-            report[key] = "Not available"
-    return report
-
-
 @lru_cache(maxsize=1)
 def _load_local_llm(model_name: str):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-    )
+    if tokenizer.pad_token_id is None:
+        # SmolLM2 doesn't define a pad token by default — without this,
+        # generate() can fail deep inside transformers with a bare
+        # AssertionError that has no message.
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model = AutoModelForCausalLM.from_pretrained(model_name)
     return tokenizer, model
 
+
+def _generate_with_local_llm(prompt: str, model_name: str) -> dict:
+    if os.getenv("LOCAL_LLM_ENABLED", "true").lower() not in {"1", "true", "yes"}:
+        raise RuntimeError("LOCAL_LLM_ENABLED is disabled")
+
+    import torch
+
+    tokenizer, model = _load_local_llm(model_name)
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": prompt},
+    ]
+    if tokenizer.chat_template:
+        encoded = tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            return_tensors="pt",
+            return_dict=True,
+        )
+        input_ids = encoded["input_ids"]
+    else:
+        input_ids = tokenizer(
+            f"{SYSTEM_PROMPT}\n\n{prompt}",
+            return_tensors="pt",
+        ).input_ids
+
+    with torch.no_grad():
+        output = model.generate(
+            input_ids,
+            max_new_tokens=500,
+            do_sample=False,
+            pad_token_id=tokenizer.pad_token_id,
+        )
+    generated = output[0][input_ids.shape[-1]:]
+    text = tokenizer.decode(generated, skip_special_tokens=True)
+    if not text.strip():
+        raise RuntimeError("Local model produced an empty response")
+    report = _parse_report(text)
+    report["disclaimer"] = STANDARD_DISCLAIMER
+    return report
 
 def _generate_with_groq(prompt: str, model: str) -> dict:
     if groq_client is None:
@@ -168,46 +227,12 @@ def _generate_with_gemini(prompt: str, model: str) -> dict:
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
             temperature=0.3,
-            max_output_tokens=1000,
+            max_output_tokens=2048,
             response_mime_type="application/json",
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
         ),
     )
     return _parse_report(response.text)
-
-
-def _generate_with_local_llm(prompt: str, model_name: str) -> dict:
-    if os.getenv("LOCAL_LLM_ENABLED", "true").lower() not in {"1", "true", "yes"}:
-        raise RuntimeError("LOCAL_LLM_ENABLED is disabled")
-
-    import torch
-
-    tokenizer, model = _load_local_llm(model_name)
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": prompt},
-    ]
-    if tokenizer.chat_template:
-        inputs = tokenizer.apply_chat_template(
-            messages,
-            add_generation_prompt=True,
-            return_tensors="pt",
-        )
-    else:
-        inputs = tokenizer(
-            f"{SYSTEM_PROMPT}\n\n{prompt}",
-            return_tensors="pt",
-        ).input_ids
-
-    with torch.no_grad():
-        output = model.generate(
-            inputs,
-            max_new_tokens=500,
-            do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
-        )
-    generated = output[0][inputs.shape[-1]:]
-    return _parse_report(tokenizer.decode(generated, skip_special_tokens=True))
-
 
 def generate_report(stats: dict, interpretations: dict, scan_type: str) -> dict:
     """Try the quality-ranked multi-provider route, then use a local fallback."""
@@ -243,5 +268,5 @@ def _fallback_report() -> dict:
         "confidence": "Low",
         "differential": ["Analysis unavailable"],
         "recommendations": "Please consult a qualified medical professional.",
-        "disclaimer": "This is an AI-generated preliminary analysis and is NOT a clinical diagnosis. Always consult a licensed physician.",
-    }
+        "disclaimer": STANDARD_DISCLAIMER,
+        }
