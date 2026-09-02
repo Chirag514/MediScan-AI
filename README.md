@@ -17,15 +17,15 @@ Streamlit UI              →  overlay image + structured JSON report + PDF down
 ```
 
 ## 🧠 LLM Fallback Chain
-To prevent failure from API rate limits or network downtime, MediScan AI uses an interleaved, quality-ranked routing system that steps down through models until a valid report is generated.
+To prevent failure from API rate limits or network downtime, MediScan AI uses an fallback chain that steps down through models until a valid report is generated.
 
 ### Fallback Execution Order:
-1. **Gemini** — `gemini-3.7-flash` *(Primary Cloud)*
-2. **Groq** — `openai/gpt-oss-120b`
-3. **Gemini** — `gemini-3.5-flash`
-4. **Groq** — `openai/gpt-oss-20b`
-5. **Gemini** — `gemini-3.5-flash-lite`
-6. **Groq** — `qwen/qwen3.6-27b`
+1. **Groq** — `openai/gpt-oss-120b` *(Primary)*
+2. **Gemini** — `gemini-3.7-flash` 
+3. **Groq** — `openai/gpt-oss-20b`
+4. **Gemini** — `gemini-3.5-flash`
+5. **Groq** — `qwen/qwen3.6-27b`
+6. **Gemini** — `gemini-3.5-flash-lite`
 7. **Local LLM** — `HuggingFaceTB/SmolLM2-360M-Instruct` *(Offline fallback when cloud APIs fail)*
 
 ## Supported Scan Types

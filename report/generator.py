@@ -62,10 +62,10 @@ LOCAL_LLM_MODEL = os.getenv(
 # request and token quota when a stronger model is unavailable or rate-limited.
 MODEL_ROUTE = []
 for index in range(max(len(GROQ_MODELS), len(GEMINI_MODELS))):
-    if index < len(GEMINI_MODELS):
-        MODEL_ROUTE.append(("Gemini", GEMINI_MODELS[index]))
     if index < len(GROQ_MODELS):
         MODEL_ROUTE.append(("Groq", GROQ_MODELS[index]))
+    if index < len(GEMINI_MODELS):
+        MODEL_ROUTE.append(("Gemini", GEMINI_MODELS[index]))
 
 SYSTEM_PROMPT = """You are a medical imaging AI assistant that generates structured preliminary 
 reports based on image segmentation analysis data. You are NOT a doctor and your output is 
