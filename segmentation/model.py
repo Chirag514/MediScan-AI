@@ -1,12 +1,11 @@
 """
 segmentation/model.py
 ONNX Runtime inference for SegFormer-b2 fine-tuned models.
-Replaces SAM2 — deterministic, CPU-fast, no mask selection needed.
 
 Models (place in ./models/):
-    segformer_isic.onnx  — skin lesion segmentation
-    segformer_busi.onnx  — breast ultrasound segmentation
-    segformer_xray.onnx  — lung segmentation (chest X-ray)
+    segformer_b2_isic.onnx  — skin lesion segmentation
+    segformer_b2_busi.onnx  — breast ultrasound segmentation
+    segformer_b2_xray.onnx  — lung segmentation (chest X-ray)
 """
 
 import numpy as np
@@ -21,9 +20,9 @@ torch.set_num_threads(1)
 
 # ── Model registry ───────────────────────────────────────────────────────────
 MODELS = {
-    "skin_lesion": "models/segformer_isic.onnx",
-    "ultrasound":  "models/segformer_busi.onnx",
-    "chest_xray":  "models/segformer_xray.onnx",
+    "skin_lesion": "models/segformer_b2_isic.onnx",
+    "ultrasound":  "models/segformer_b2_busi.onnx",
+    "chest_xray":  "models/segformer_b2_xray.onnx",
 }
 REPO_ROOT = Path(__file__).resolve().parent.parent
 

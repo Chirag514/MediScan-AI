@@ -1,6 +1,6 @@
 """
 report/generator.py
-Structured clinical report generation via Groq with Gemini fallback.
+Structured clinical report generation via (Groq + Gemini + Local LLM) fallback.
 Takes segmentation stats → returns structured report dict.
 """
 
@@ -46,7 +46,7 @@ def _model_list(variable: str, defaults: list[str]) -> list[str]:
 
 GROQ_MODELS = _model_list(
     "GROQ_MODELS",
-    ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.6-27b"],
+    ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"],
 )
 GEMINI_MODELS = _model_list(
     "GEMINI_MODELS",
