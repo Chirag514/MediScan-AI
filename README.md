@@ -35,7 +35,7 @@ To prevent failure from API rate limits or network downtime, MediScan AI uses an
 
 ## Why SegFormer-b2?
 
-SegFormer-b2 was selected after benchmarking 10 segmentation architectures — SegFormer-b0/b1/b2, and five CNN decoder architectures (U-Net, U-Net++, DeepLabV3+, FPN, MAnet) with ResNet34 encoders, plus MobileNetV2 and EfficientNet-B0 encoder variants on U-Net and DeepLabV3+ respectively — across all three datasets. Full results are in [`evaluation/model_comparison.csv`](evaluation/model_comparision.csv).
+SegFormer-b2 was selected after benchmarking 10 segmentation architectures — SegFormer-b0/b1/b2, and five CNN decoder architectures (U-Net, U-Net++, DeepLabV3+, FPN, MAnet) with ResNet34 encoders, plus MobileNetV2 and EfficientNet-B0 encoder variants on U-Net and DeepLabV3+ respectively — across all three datasets. Full results are in [`evaluation/model_comparision.csv`](evaluation/model_comparision.csv).
 
 | Dataset | Best alternative | Alt. Dice | SegFormer-b2 Dice | Margin |
 | --- | --- | --- | --- | --- |
